@@ -40,12 +40,19 @@
         <span class="moves">0</span> Moves
       </div>
 
+      <div class="best-score">
+        Best: <span id="best-moves">--</span>
+      </div>
+
       <div class="player-turn" style="display: none;">
         Player <span class="current-player">1</span>'s Turn
       </div>
 
       <div class="restart">
         <i class="fa fa-repeat"></i>
+      </div>
+      <div class="change-mode">
+        <i class="fa fa-cog"></i>
       </div>
     </section>
 
@@ -59,6 +66,14 @@
       <button id="mode-std">Standard</button>
       <button id="mode-seq-1p">Sequential (1 Player)</button>
       <button id="mode-seq-2p">Sequential (2 Players)</button>
+    </section>
+  </div>
+
+  <div class="container size-dialog" style="display: none;">
+    <section class="mode-content">
+      <h1>Select Grid Size</h1>
+      <button id="size-4x4">4 x 4</button>
+      <button id="size-6x6">6 x 6</button>
     </section>
   </div>
 
@@ -80,7 +95,8 @@
     </section>
   </div>
 
-  <script src="js/bundle_vanilla.js"></script>
+  <!-- <script src="js/bundle_vanilla.js"></script> -->
+  <script type="module" src="js/app.js"></script>
 </body>
 
 </html>

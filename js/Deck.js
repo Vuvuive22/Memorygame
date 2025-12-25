@@ -32,16 +32,48 @@ class Deck {
       { symbol: 'fa-bicycle', type: 'icon', faceup: false, matched: false },
       { symbol: 'fa-bomb', type: 'icon', faceup: false, matched: false },
       { symbol: 'fa-bomb', type: 'icon', faceup: false, matched: false },
+      // Extra cards for 6x6
+      { symbol: 'fa-coffee', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-coffee', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-car', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-car', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-camera', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-camera', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-envelope', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-envelope', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-gift', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-gift', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-heart', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-heart', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-key', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-key', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-plane', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-plane', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-star', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-star', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-tree', type: 'icon', faceup: false, matched: false },
+      { symbol: 'fa-tree', type: 'icon', faceup: false, matched: false },
     ];
   }
 
+  getDeck(size = 16) {
+    // If size is 16, return slice. If size is 36, return all (assuming standard deck has enough).
+    // shuffle() will handle taking this returned deck.
+    // For now we assume standardDeck is big enough for 6x6 (36) or 4x4 (16)
+    if (size > this.standardDeck.length) {
+      console.error("Not enough cards in standard deck");
+      return this.standardDeck;
+    }
+    return this.standardDeck.slice(0, size);
+  }
+
   /**
-   * @description Create a deck for sequential mode (numbers 1-16)
+   * @description Create a deck for sequential mode (numbers 1-size)
    * @returns {Object[]} Array of card objects
    */
-  createSequentialDeck() {
+  createSequentialDeck(size = 16) {
     const deck = [];
-    for (let i = 1; i <= 16; i++) {
+    for (let i = 1; i <= size; i++) {
       deck.push({
         symbol: i.toString(),
         type: 'text',

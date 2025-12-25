@@ -64,11 +64,16 @@ class GamePlay {
    * to create a new game deck
    * @memberof GamePlay
    */
-  startNewGame(mode = 'STANDARD', numPlayers = 1) {
+  startNewGame(mode = 'STANDARD', numPlayers = 1, gridSize = 16) {
     this.gameMode = mode;
     this.numPlayers = numPlayers;
+    this.gridSize = gridSize;
     this.activePlayer = 1;
     this.nextSequenceValue = 1;
+
+    // Adjust Limits based on grid size
+    this.matchLimit = gridSize / 2; // e.g., 8 for 16, 18 for 36
+    this.sequentialLimit = gridSize;
 
     this.playerRating = MAX_PLAYER_RATING;
     this.gameUI.updatePlayerRating(this.playerRating, MAX_PLAYER_RATING);
@@ -82,7 +87,7 @@ class GamePlay {
     // Remove any old event listeners or state if necessary (not needed here as we rebuild deck)
 
     if (this.gameMode === 'SEQUENTIAL') {
-      const seqDeck = this.deck.createSequentialDeck();
+      const seqDeck = this.deck.createSequentialDeck(gridSize);
       this.gameDeck = this.deck.shuffle(seqDeck);
       if (numPlayers > 1) {
         this.gameUI.updatePlayerTurn(1);
@@ -90,11 +95,12 @@ class GamePlay {
         this.gameUI.hidePlayerTurn();
       }
     } else {
-      this.gameDeck = this.deck.shuffle();
+      const stdDeck = this.deck.getDeck(gridSize);
+      this.gameDeck = this.deck.shuffle(stdDeck);
       this.gameUI.hidePlayerTurn();
     }
 
-    this.gameUI.buildDeck(this.gameDeck);
+    this.gameUI.buildDeck(this.gameDeck, gridSize);
 
     // Explicitly reset all cards in UI just in case buildDeck didn't clear well, 
     // though buildDeck does clear child elements.
@@ -139,7 +145,7 @@ class GamePlay {
     }
 
     // Check for the end of the current game
-    if (this.matchCount >= MATCH_LIMIT) {
+    if (this.matchCount >= this.matchLimit) {
       this.gameUI.stopTimer();
       this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
       return true;
@@ -162,7 +168,7 @@ class GamePlay {
       this.nextSequenceValue += 1;
       this.matchCount += 1;
 
-      if (this.matchCount === SEQUENTIAL_LIMIT) {
+      if (this.matchCount === this.sequentialLimit) {
         this.gameUI.stopTimer();
         this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
       }

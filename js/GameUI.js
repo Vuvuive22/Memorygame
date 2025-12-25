@@ -19,8 +19,15 @@ class GameUI {
    * @param {Object[]} gameDeck Cards in the current game deck
    * @memberof GameUI
    */
-  buildDeck(gameDeck) {
+  buildDeck(gameDeck, gridSize) {
     const deckElement = document.querySelector('.deck');
+
+    // Remove existing classes for grid size to reset
+    deckElement.classList.remove('grid-6x6');
+    if (gridSize === 36) {
+      deckElement.classList.add('grid-6x6');
+    }
+
     if (deckElement.childElementCount > 0) {
       while (deckElement.firstChild) {
         deckElement.removeChild(deckElement.firstChild);
@@ -31,6 +38,9 @@ class GameUI {
       const liElement = document.createElement('li');
       liElement.setAttribute('id', `${cardIndex}`);
       liElement.setAttribute('class', 'card');
+      liElement.setAttribute('tabindex', '0');
+      liElement.setAttribute('role', 'button');
+      liElement.setAttribute('aria-label', 'Card');
 
       if (card.type === 'text') {
         liElement.innerText = card.symbol;
@@ -54,6 +64,11 @@ class GameUI {
    */
   toggleModeSelection(show) {
     const modal = document.querySelector('.mode-dialog');
+    modal.style.display = show ? 'flex' : 'none';
+  }
+
+  toggleSizeSelection(show) {
+    const modal = document.querySelector('.size-dialog');
     modal.style.display = show ? 'flex' : 'none';
   }
 
@@ -96,6 +111,17 @@ class GameUI {
   turnCardFaceUp(selectedCardIndex) {
     const selectedCard = document.getElementById(`${selectedCardIndex}`);
     selectedCard.classList.add('open', 'faceup');
+  }
+
+  /**
+   * @description Check if a card is already matched
+   * @param {Number} cardIndex
+   * @returns {Boolean}
+   * @memberof GameUI
+   */
+  isCardMatched(cardIndex) {
+    const card = document.getElementById(`${cardIndex}`);
+    return card.classList.contains('match');
   }
 
   /**
@@ -223,6 +249,11 @@ class GameUI {
     document.querySelector('.win-moves').innerText = moveCount;
     document.querySelector('.win-stars').innerText = playerRating;
 
+    document.querySelector('.win-stars').innerText = playerRating;
+
+    this.checkBestScore(moveCount);
+    this.updateBestScoreDOM();
+
     const winButton = document.querySelector('.win-button');
     winButton.gamePlayRef = gamePlay; // Make gamePlay available to event handler
     winButton.addEventListener('click', this.setupForNewGame);
@@ -239,9 +270,33 @@ class GameUI {
   setupForNewGame(event) {
     document.querySelector('.win-dialog').setAttribute('style', 'display: none');
     document.querySelector('.game-board').setAttribute('style', 'display: flex');
-    event.target.gamePlayRef.startNewGame();
+    const gp = event.target.gamePlayRef;
+    gp.startNewGame(gp.gameMode, gp.numPlayers, gp.gridSize);
   }
 
+  /**
+   * @description Check and update best score in LocalStorage
+   * @param {Number} currentMoves
+   */
+  checkBestScore(currentMoves) {
+    const bestMoves = localStorage.getItem('memory-game-best-moves');
+    if (!bestMoves || currentMoves < parseInt(bestMoves)) {
+      localStorage.setItem('memory-game-best-moves', currentMoves);
+      return currentMoves;
+    }
+    return bestMoves;
+  }
+
+  /**
+   * @description Update the Best Score display in the DOM
+   */
+  updateBestScoreDOM() {
+    const bestMoves = localStorage.getItem('memory-game-best-moves');
+    const bestMovesElement = document.getElementById('best-moves');
+    if (bestMovesElement) {
+      bestMovesElement.innerText = bestMoves ? bestMoves : '--';
+    }
+  }
 }
 
 export default GameUI;
