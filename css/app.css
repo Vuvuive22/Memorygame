@@ -183,10 +183,12 @@ h1 {
 
 .score-panel {
   text-align: left;
-  width: 345px;
+  width: 100%;
+  max-width: 660px;
   margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .score-panel .stars {

@@ -59,6 +59,23 @@ class GameUI {
   // ... (keeping existing methods)
 
   /**
+   * @description Toggle visibility of competitive info (Timer and Stars)
+   * @param {Boolean} show True to show, false to hide
+   */
+  toggleCompetitiveInfo(show) {
+    const timer = document.querySelector('.timer');
+    const stars = document.querySelector('.stars');
+    const displayStyle = show ? '' : 'none'; // 'flex' or block is default usually handled by CSS, '' resets to CSS default
+    
+    // Timer is inline-block or similar, stars is ul
+    // To be safe, let's use the computed style or just set display.
+    // CSS for timer is .timer { ... }, stars { ... }
+    
+    if (timer) timer.style.display = show ? 'inline-block' : 'none'; // Assuming inline-block based on layout
+    if (stars) stars.style.display = show ? 'inline-block' : 'none';
+  }
+
+  /**
    * @description Toggle Mode Selection Modal
    * @param {Boolean} show True to show, false to hide
    */

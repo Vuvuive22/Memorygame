@@ -104,7 +104,13 @@ class GamePlay {
 
     // Explicitly reset all cards in UI just in case buildDeck didn't clear well, 
     // though buildDeck does clear child elements.
-    this.gameUI.startTimer();
+
+    if (this.gameMode === 'SEQUENTIAL' && this.numPlayers === 2) {
+      this.gameUI.toggleCompetitiveInfo(false);
+    } else {
+      this.gameUI.toggleCompetitiveInfo(true);
+      this.gameUI.startTimer();
+    }
   }
 
   /**
