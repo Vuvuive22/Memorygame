@@ -182,7 +182,6 @@ class GamePlay {
   handleCardClick(cardIndex) {
     if (this.gameMode === 'ONLINE_SEQUENTIAL') {
       if (this.isTurnInprogress) {
-        alert("Chờ chút, đang xử lý nước đi trước...");
         return;
       }
       if (this.pendingMove) return; // Silent return for spam clicks
