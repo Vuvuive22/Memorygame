@@ -24,6 +24,8 @@ class GamePlay {
     this.deckFragment = null;
     this.wait = ms => new Promise((r, j) => setTimeout(r, ms));
     this.isTurnInprogress = false;
+    this.onlineManager = null; // Reference to OnlineManager
+    this.pendingMove = false; // Lock to prevent spam clicking
 
     // New state
     this.gameMode = 'STANDARD';
@@ -50,6 +52,10 @@ class GamePlay {
     this.gameUI = gameUI;
   }
 
+  setOnlineManager(manager) {
+    this.onlineManager = manager;
+  }
+
   /**
    * @description Retrieve the game deck
    * @returns {Object[]} Game deck
@@ -64,7 +70,7 @@ class GamePlay {
    * to create a new game deck
    * @memberof GamePlay
    */
-  startNewGame(mode = 'STANDARD', numPlayers = 1, gridSize = 16) {
+  startNewGame(mode = 'STANDARD', numPlayers = 1, gridSize = 16, predefinedDeck = null) {
     this.gameMode = mode;
     this.numPlayers = numPlayers;
     this.gridSize = gridSize;
@@ -86,14 +92,14 @@ class GamePlay {
 
     // Remove any old event listeners or state if necessary (not needed here as we rebuild deck)
 
-    if (this.gameMode === 'SEQUENTIAL') {
+    if (this.gameMode === 'SEQUENTIAL' || this.gameMode === 'ONLINE_SEQUENTIAL') {
       const seqDeck = this.deck.createSequentialDeck(gridSize);
-      this.gameDeck = this.deck.shuffle(seqDeck);
-      if (numPlayers > 1) {
-        this.gameUI.updatePlayerTurn(1);
+      if (predefinedDeck) {
+        this.gameDeck = predefinedDeck; // Use synced deck
       } else {
-        this.gameUI.hidePlayerTurn();
+        this.gameDeck = this.deck.shuffle(seqDeck);
       }
+
     } else {
       const stdDeck = this.deck.getDeck(gridSize);
       this.gameDeck = this.deck.shuffle(stdDeck);
@@ -104,7 +110,6 @@ class GamePlay {
 
     // Explicitly reset all cards in UI just in case buildDeck didn't clear well, 
     // though buildDeck does clear child elements.
-
     if (this.gameMode === 'SEQUENTIAL' && this.numPlayers === 2) {
       this.gameUI.toggleCompetitiveInfo(false);
     } else {
@@ -112,7 +117,6 @@ class GamePlay {
       this.gameUI.startTimer();
     }
   }
-
   /**
    * @description Control a turn within the game.
    * @param {Number} selectedCardIndex Index of the selected card in the deck.
@@ -120,12 +124,18 @@ class GamePlay {
    * @memberof GamePlay
    */
   turn(selectedCardIndex) {
-    if (this.isTurnInprogress) return false;
+    this.pendingMove = false; // Unlock spam protection
+    if (this.isTurnInprogress) {
+      return false;
+    }
     if (selectedCardIndex === null) return false;
-    if (this.gameUI.isCardMatched(selectedCardIndex)) return false;
+    if (this.gameUI.isCardMatched(selectedCardIndex)) {
+      alert("Lỗi Logic: Thẻ này đã được lật rồi!");
+      return false;
+    }
 
     // Logic split based on Mode
-    if (this.gameMode === 'SEQUENTIAL') {
+    if (this.gameMode === 'SEQUENTIAL' || this.gameMode === 'ONLINE_SEQUENTIAL') {
       this.turnSequential(selectedCardIndex);
       return false; // Game end handled inside
     }
@@ -153,69 +163,130 @@ class GamePlay {
     // Check for the end of the current game
     if (this.matchCount >= this.matchLimit) {
       this.gameUI.stopTimer();
-      this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
+      // Only show Win Dialog locally? Or rely on OnlineManager?
+      // For synced game, both will reach here.
+      if (this.gameMode !== 'ONLINE_SEQUENTIAL') { // Let OnlineManager handle end game via onGameEnd?
+        this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
+      }
       return true;
     }
     return false;
+  }
+
+  // Helper to set active player
+  setActivePlayer(playerNum) {
+    this.activePlayer = playerNum;
+    this.gameUI.updatePlayerTurn(playerNum);
+  }
+
+  handleCardClick(cardIndex) {
+    if (this.gameMode === 'ONLINE_SEQUENTIAL') {
+      if (this.isTurnInprogress) {
+        alert("Chờ chút, đang xử lý nước đi trước...");
+        return;
+      }
+      if (this.pendingMove) return; // Silent return for spam clicks
+
+      if (this.gameUI.isCardMatched(cardIndex)) return;
+
+      if (!this.onlineManager) {
+        alert("Lỗi CRITICAL: OnlineManager chưa được kết nối!");
+        return;
+      }
+      // Loose equality
+      if (this.onlineManager.myPlayerNumber != this.activePlayer) {
+        alert(`Không phải lượt của bạn!\nBạn là Player: ${this.onlineManager.myPlayerNumber}\nĐang lượt: ${this.activePlayer}`);
+        return;
+      }
+      this.pendingMove = true;
+      this.onlineManager.sendMove(cardIndex);
+    } else {
+      this.turn(cardIndex);
+    }
   }
 
   /**
    * @description Handle turn logic for Sequential Mode
    */
   async turnSequential(cardIndex) {
-    const card = this.gameDeck[cardIndex];
-    this.gameUI.turnCardFaceUp(cardIndex);
-    this.moveCount += 1;
-    this.gameUI.updateMoveCount(this.moveCount);
-
-    if (card.value === this.nextSequenceValue) {
-      // Correct!
-      this.gameUI.markMatchedPair(cardIndex); // Single card match
-      this.nextSequenceValue += 1;
-      this.matchCount += 1;
-
-      if (this.matchCount === this.sequentialLimit) {
-        this.gameUI.stopTimer();
-        this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
+    try {
+      if (!this.gameDeck || !this.gameDeck[cardIndex]) {
+        alert(`Lỗi CRITICAL: Không tìm thấy lá bài tại Index ${cardIndex}. Deck size: ${this.gameDeck ? this.gameDeck.length : 'null'}`);
+        return;
       }
-    } else {
-      // Wrong!
-      this.isTurnInprogress = true;
-      await this.wait(TWO_SECONDS);
 
-      // Reset logic: Flip all cards down.
-      // In Sequential mode, "matched" means they are Open.
-      // So we need to flip down ALL cards that were "matched" (1 to matchCount) + the current one.
+      const card = this.gameDeck[cardIndex];
+      this.gameUI.turnCardFaceUp(cardIndex);
+      this.moveCount += 1;
+      this.gameUI.updateMoveCount(this.moveCount);
 
-      this.gameUI.turnCardFaceDown(cardIndex); // The wrong one
+      if (card.value === this.nextSequenceValue) {
+        // Correct!
+        this.gameUI.markMatchedPair(cardIndex);
+        this.nextSequenceValue += 1;
+        this.matchCount += 1;
 
-      // Reset all matched cards in the deck
-      this.gameDeck.forEach((c, idx) => {
-        if (this.gameUI.isCardMatched(idx) || idx == cardIndex) {
-          this.gameUI.turnCardFaceDown(idx);
-          const el = document.getElementById(`${idx}`);
-          el.classList.remove('match', 'open', 'faceup');
-          // Reset styling if added by markMatchedPair
-          el.setAttribute('style', '');
+        if (this.matchCount === this.sequentialLimit) {
+          this.gameUI.stopTimer();
 
-          // IMPORTANT: Re-apply 'card' class to ensure it's not broken
-          // But GameUI.turnCardFaceDown already handles resetting classes mostly.
-          // We need to make sure we don't accidentally leave it in a state where it thinks it's matched.
-          // The logic above removes 'match', so isCardMatched() should return false next time.
+          if (this.gameMode === 'ONLINE_SEQUENTIAL') {
+            // HOST AUTHORITATIVE WIN
+            if (this.onlineManager && this.onlineManager.isHost) {
+              const winnerId = this.onlineManager.getPlayerIdByNumber(this.activePlayer);
+              if (winnerId) {
+                this.onlineManager.declareWin(winnerId);
+              } else {
+                alert("Lỗi: Không tìm thấy ID người thắng!");
+              }
+            }
+            // Clients do nothing, waiting for onGameEnd listener
+          } else {
+            this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
+          }
+        } else {
+          if (this.gameMode === 'ONLINE_SEQUENTIAL') {
+            this.onlineManager.updateProgress(this.matchCount);
+          }
         }
-        // Double check: if it was matched, we mark it as unmatched in our state if we tracked it there?
-        // This implementation relies on the DOM for `isCardMatched`, so removing the class is enough.
-      });
+      } else {
+        // Wrong!
+        this.isTurnInprogress = true;
+        await this.wait(TWO_SECONDS);
 
-      this.nextSequenceValue = 1;
-      this.matchCount = 0;
+        this.gameUI.turnCardFaceDown(cardIndex);
 
-      if (this.numPlayers > 1) {
-        this.activePlayer = this.activePlayer === 1 ? 2 : 1;
-        this.gameUI.updatePlayerTurn(this.activePlayer);
+        this.gameDeck.forEach((c, idx) => {
+          if (this.gameUI.isCardMatched(idx) || idx == cardIndex) {
+            this.gameUI.turnCardFaceDown(idx);
+            const el = document.getElementById(`${idx}`);
+            el.classList.remove('match', 'open', 'faceup');
+            el.setAttribute('style', '');
+          }
+        });
+
+        this.nextSequenceValue = 1;
+        this.matchCount = 0;
+
+        if (this.numPlayers > 1 || this.gameMode === 'ONLINE_SEQUENTIAL') {
+          const nextPlayer = (this.activePlayer % this.numPlayers) + 1;
+
+          if (this.gameMode === 'ONLINE_SEQUENTIAL') {
+            // HOST AUTHORITATIVE: Only host updates turn to prevent race conditions
+            if (this.onlineManager && this.onlineManager.isHost) {
+              this.onlineManager.updateActiveTurn(nextPlayer);
+            }
+          } else {
+            this.activePlayer = nextPlayer;
+            this.gameUI.updatePlayerTurn(this.activePlayer);
+          }
+        }
+
+        this.isTurnInprogress = false;
       }
-
-      this.isTurnInprogress = false;
+    } catch (e) {
+      alert("Lỗi Logic trong turnSequential: " + e.message);
+      console.error(e);
+      this.isTurnInprogress = false; // Reset lock
     }
   }
 

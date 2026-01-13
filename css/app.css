@@ -384,3 +384,54 @@ h1 {
     margin: 10px;
   }
 }
+
+/* Online Mode Styles */
+
+.online-menu-dialog,
+.join-room-dialog,
+.lobby-dialog {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(46, 61, 73, 0.9);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+#lobby-players-list {
+  background: #f0f0f0;
+  border-radius: 10px;
+  padding: 15px;
+  min-width: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.player-item {
+  padding: 5px;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+}
+
+.player-item.ready {
+  color: #02ccba;
+}
+
+
+/* Online HUD */
+.online-hud h3 {
+  margin-top: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 5px;
+  font-size: 16px;
+}
+
+.opponent-progress {
+  font-size: 14px;
+  margin-bottom: 5px;
+}

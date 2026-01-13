@@ -66,7 +66,51 @@
       <button id="mode-std">Standard</button>
       <button id="mode-seq-1p">Sequential (1 Player)</button>
       <button id="mode-seq-2p">Sequential (2 Players)</button>
+      <button id="mode-online">Online Multiplayer</button>
     </section>
+  </div>
+
+  <!-- Online Menu Dialog -->
+  <div class="container online-menu-dialog" style="display: none;">
+    <section class="mode-content">
+      <h1>Online Mode</h1>
+      <button id="btn-create-room">Create Room</button>
+      <button id="btn-join-room">Join Room</button>
+      <button id="btn-online-back">Back</button>
+    </section>
+  </div>
+
+  <!-- Join Room Dialog -->
+  <div class="container join-room-dialog" style="display: none;">
+    <section class="mode-content">
+      <h1>Enter Room Code</h1>
+      <input type="number" id="room-code-input" placeholder="1234" maxlength="4"
+        style="font-size: 20px; padding: 10px; margin-bottom: 10px; text-align: center;">
+      <button id="btn-join-submit">Join</button>
+      <button id="btn-join-back">Back</button>
+    </section>
+  </div>
+
+  <!-- Lobby Dialog -->
+  <div class="container lobby-dialog" style="display: none;">
+    <section class="mode-content">
+      <h1>Lobby <span id="lobby-room-code"></span></h1>
+      <div id="lobby-players-list" style="margin-bottom: 20px; font-size: 1.2em;">
+        <!-- Player list goes here -->
+      </div>
+      <button id="btn-start-game" style="display: none;">Start Game</button>
+      <p id="waiting-msg">Waiting for host...</p>
+      <button id="btn-lobby-leave">Leave Room</button>
+    </section>
+  </div>
+
+  <!-- Online HUD (In-game) -->
+  <div class="online-hud"
+    style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 8px;">
+    <h3>Opponents</h3>
+    <ul id="online-progress-list" style="list-style: none; padding: 0;">
+      <!-- Updates go here -->
+    </ul>
   </div>
 
   <div class="container size-dialog" style="display: none;">

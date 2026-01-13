@@ -261,11 +261,14 @@ class GameUI {
   showWinDialog(gamePlay, playerRating, moveCount) {
     document.querySelector('.game-board').setAttribute('style', 'display: none');
 
+    // Update Banner and Icon for WIN
+    document.querySelector('.win-banner').innerText = "You are a Winner!";
+    const icon = document.querySelector('.win-icon');
+    icon.className = 'win-icon fa fa-check-circle-o'; // Success icon
+
     document.querySelector('.win-minutes').innerText = this.gameTimerMinutes;
     document.querySelector('.win-seconds').innerText = this.gameTimerSeconds;
     document.querySelector('.win-moves').innerText = moveCount;
-    document.querySelector('.win-stars').innerText = playerRating;
-
     document.querySelector('.win-stars').innerText = playerRating;
 
     this.checkBestScore(moveCount);
@@ -273,6 +276,30 @@ class GameUI {
 
     const winButton = document.querySelector('.win-button');
     winButton.gamePlayRef = gamePlay; // Make gamePlay available to event handler
+    winButton.addEventListener('click', this.setupForNewGame);
+    document.querySelector('.win-dialog').setAttribute('style', 'display: flex');
+  }
+
+  /**
+   * @description Display the game loss dialog
+   */
+  showLossDialog(gamePlay) {
+    document.querySelector('.game-board').setAttribute('style', 'display: none');
+
+    // Update Banner and Icon for LOSS
+    document.querySelector('.win-banner').innerText = "You are a Loser!";
+    const icon = document.querySelector('.win-icon');
+    icon.className = 'win-icon fa fa-times-circle-o'; // Fail icon (X)
+
+    // Hide or reset stats? User didn't specify. Keeping them is fine, or hiding.
+    // Simplifying for Loss: Just show the message.
+    document.querySelector('.win-minutes').innerText = "--";
+    document.querySelector('.win-seconds').innerText = "--";
+    document.querySelector('.win-moves').innerText = "--";
+    document.querySelector('.win-stars').innerText = "0";
+
+    const winButton = document.querySelector('.win-button');
+    winButton.gamePlayRef = gamePlay;
     winButton.addEventListener('click', this.setupForNewGame);
     document.querySelector('.win-dialog').setAttribute('style', 'display: flex');
   }
@@ -286,9 +313,18 @@ class GameUI {
    */
   setupForNewGame(event) {
     document.querySelector('.win-dialog').setAttribute('style', 'display: none');
-    document.querySelector('.game-board').setAttribute('style', 'display: flex');
+
     const gp = event.target.gamePlayRef;
-    gp.startNewGame(gp.gameMode, gp.numPlayers, gp.gridSize);
+    if (gp.gameMode === 'ONLINE_SEQUENTIAL') {
+      // For Online, we do not restart locally. We assume the user is returned to the menu.
+      // The menu was already triggered in onGameEnd, so we just close the dialog.
+      // Ensure game board is hidden to show menu cleanly.
+      document.querySelector('.game-board').setAttribute('style', 'display: none');
+      // Reset/Leave room logic is handled by app.js or user action
+    } else {
+      document.querySelector('.game-board').setAttribute('style', 'display: flex');
+      gp.startNewGame(gp.gameMode, gp.numPlayers, gp.gridSize);
+    }
   }
 
   /**
