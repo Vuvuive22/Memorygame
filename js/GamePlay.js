@@ -237,8 +237,9 @@ class GamePlay {
               } else {
                 alert("Lỗi: Không tìm thấy ID người thắng!");
               }
+            } else {
+              // Client side wait
             }
-            // Clients do nothing, waiting for onGameEnd listener
           } else {
             this.gameUI.showWinDialog(this, this.playerRating, this.moveCount);
           }

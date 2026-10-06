@@ -212,6 +212,10 @@ OnlineManager.onGameEnd = (winnerId) => {
   gameUI.toggleModeSelection(true);
 };
 
+// Settings Event Handlers
+
+
+
 // Size Selection Event Handlers
 document.getElementById('size-4x4').addEventListener('click', async () => {
   gameUI.toggleSizeSelection(false);
@@ -222,7 +226,7 @@ document.getElementById('size-4x4').addEventListener('click', async () => {
       showLobby(code);
     } catch (error) {
       console.error("Create Room Error:", error);
-      alert("Lỗi tạo phòng: " + error.message + "\nKiểm tra lại cấu hình Firebase trong firebase-config.js");
+      alert("Error creating room: " + error.message);
       gameUI.toggleModeSelection(true); // Go back
     }
   } else {
@@ -239,7 +243,7 @@ document.getElementById('size-6x6').addEventListener('click', async () => {
       showLobby(code);
     } catch (error) {
       console.error("Create Room Error:", error);
-      alert("Lỗi tạo phòng: " + error.message + "\nKiểm tra lại cấu hình Firebase trong firebase-config.js");
+      alert("Error creating room: " + error.message);
       gameUI.toggleModeSelection(true); // Go back
     }
   } else {
