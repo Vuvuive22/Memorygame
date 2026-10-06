@@ -8,6 +8,8 @@
 
 Một trò chơi rèn luyện trí nhớ (Memory / Matching Game) hiện đại, tương tác cao được xây dựng bằng **Vanilla HTML5, CSS3, JavaScript (ES6 Modules)** kết hợp với **Firebase Realtime Database** để hỗ trợ chế độ chơi đối kháng trực tuyến (Online Multiplayer).
 
+🎮 **Chơi trực tiếp (Live Demo)**: [https://vuvuive22.github.io/Memorygame/](https://vuvuive22.github.io/Memorygame/)
+
 ---
 
 ## 🌟 Tính năng nổi bật
